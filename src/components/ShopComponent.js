@@ -74,7 +74,7 @@ const Shop = (props) => {
       formData.append("gameCash", gameCash)
     if (name !== "")
       formData.append("name", name)
-    formData.append("shopId", id)
+    formData.append("shopId", shop.id)
     return formData
   }
 
