@@ -39,8 +39,12 @@ const Shop = (props) => {
     const url = "https://multipokerdrf.onrender.com/api/machine/" + data.id + "/"
 
     if (gameCash !== "") {
-      data.gameCash = gameCash
-      manageCash(data.name, "pay", gameCash)
+      if (shop.gameCash - gameCash > 0) {
+        data.gameCash = gameCash
+        manageCash(data.name, "pay", gameCash)
+      }
+      else
+        alert("No dispone de suficientes créditos")
     }
     if (name !== "")
       data.name = name
@@ -50,8 +54,10 @@ const Shop = (props) => {
         alert("Se procede a retirar los créditos")
       else if (!data.assigned)
         alert("Se procede a apagar la máquina")
-      else if (gameCash !== "" || name !== "")
-        alert("Se procede a actualizar la máquina")
+      else if (gameCash !== "" || name !== "") {
+        if (shop.gameCash - gameCash > 0)
+          alert("Se procede a actualizar la máquina")
+      }
       else if (data.creditImage) {
         const credit = prompt("Ingrese los créditos ganados")
         if (credit !== null && credit !== "") {
@@ -140,7 +146,7 @@ const Shop = (props) => {
     else {
       totalCash = totalCash + parseFloat(quantity)
       totalPaid = totalPaid + parseFloat(quantity)
-      formData = createTransaction(machineName, "reembolso", quantity)
+      formData = createTransaction(machineName, "retiro", quantity)
       props.sendTransaction(formData)
     }
     shop.cashCredit = totalCash
