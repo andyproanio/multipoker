@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Form, FormGroup, Label, Input, Table, Button, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import {
+  Form, FormGroup, Label, Input, Table, Button, Card, CardBody, CardTitle, CardText,
+  Pagination, PaginationItem, PaginationLink
+} from 'reactstrap';
 import { useDateFormat } from '../hooks/useDateFormat'
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -10,6 +13,9 @@ const Inventario = () => {
   const [anio, setanio] = useState(localStorage.getItem('anio') || "")
   const [fecha, setFecha] = useState(localStorage.getItem('fecha') || "")
   const [fechaFin, setFechaFin] = useState(localStorage.getItem('fechaFin') || "")
+  const [shop, setShop] = useState(localStorage.getItem('shop') || "")
+  const [totalCredits, setTotalCredits] = useState(0)
+  const [totalPaid, setTotalPaid] = useState(0)
   const [inventario, setinventario] = useState(() => JSON.parse(localStorage.getItem('facturas')) || [])
   const pagina = parseInt(window.location.pathname.split("/").pop())
   const navigate = useNavigate()
@@ -44,19 +50,42 @@ const Inventario = () => {
         ...item, date: day + "/" + month + "/" + year + ", " + hora
       });
       fila.getCell(6).numFmt = formatoMoneda;
+      if (item.clientType !== "shop")
+        fila.hidden = true
     });
 
     const ultimaFilaDatos = inventario.length + 1;
     const filaTotalNro = ultimaFilaDatos + 1;
     const filaTotal = worksheet.getRow(filaTotalNro);
+    const filaTotal1 = worksheet.getRow(filaTotalNro + 1);
+    const filaTotal2 = worksheet.getRow(filaTotalNro + 2);
 
-    filaTotal.getCell(5).value = 'Total Acreditado';
+    filaTotal.getCell(5).value = 'Total Recargado';
+    filaTotal1.getCell(5).value = 'Total Retirado';
+    filaTotal2.getCell(5).value = 'Total Ganancia';
 
-    filaTotal.getCell(6).value = { formula: `SUBTOTAL(9, F2:F${ultimaFilaDatos})` };
+
+    filaTotal.getCell(6).value = {
+      formula: `ABS(SUMPRODUCT((F2:F${ultimaFilaDatos} < 0) * (SUBTOTAL(109, OFFSET(F2, ` +
+        `ROW(F2:F${ultimaFilaDatos}) - MIN(ROW(F2:F${ultimaFilaDatos})), 0, 1)))))`,
+      result: 0
+    };
     filaTotal.getCell(6).numFmt = formatoMoneda;
+    filaTotal1.getCell(6).value = {
+      formula: `SUMPRODUCT((F2:F${ultimaFilaDatos} > 0) * (SUBTOTAL(109, OFFSET(F2, ` +
+        `ROW(F2:F${ultimaFilaDatos}) - MIN(ROW(F2:F${ultimaFilaDatos})), 0, 1))))`,
+      result: 0
+    };
+    filaTotal1.getCell(6).numFmt = formatoMoneda;
+    filaTotal2.getCell(6).value = { formula: `-SUBTOTAL(109, F2:F${ultimaFilaDatos})` };
+    filaTotal2.getCell(6).numFmt = formatoMoneda;
 
     filaTotal.font = { bold: true };
     filaTotal.getCell(5).alignment = { horizontal: 'right' };
+    filaTotal1.font = { bold: true };
+    filaTotal1.getCell(5).alignment = { horizontal: 'right' };
+    filaTotal2.font = { bold: true };
+    filaTotal2.getCell(5).alignment = { horizontal: 'right' };
 
     worksheet.columns.forEach((column) => {
       let maxLongitud = 0;
@@ -66,7 +95,7 @@ const Inventario = () => {
 
         if (cell.value !== null && cell.value !== undefined) {
           if (typeof cell.value === 'object' && cell.value.formula) {
-            valorTexto = 'TOTAL';
+            valorTexto = 'Total Acreditado';
           } else if (cell.numFmt === formatoMoneda && typeof cell.value === 'number') {
             valorTexto = `$${cell.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
           } else {
@@ -92,18 +121,38 @@ const Inventario = () => {
     saveAs(blob, 'Transacciones.xlsx');
   }
 
+  const getTotals = (transferencia) => {
+    let credits = 0
+    let paid = 0
+    Object.keys(transferencia).forEach((key) => {
+      if (transferencia[key].clientType === "shop") {
+        if (parseFloat(transferencia[key].cash) < 0) {
+          credits = credits + Math.abs(parseFloat(transferencia[key].cash))
+          setTotalCredits(credits)
+        }
+        else {
+          paid = paid + parseFloat(transferencia[key].cash)
+          setTotalPaid(paid)
+        }
+      }
+    })
+  }
+
   useEffect(() => {
     localStorage.setItem("fecha", "")
     localStorage.setItem("fechaFin", "")
     localStorage.setItem("anio", "Seleccione")
     localStorage.setItem("mes", "")
+    localStorage.setItem("shop", "")
     const fetchData = async () => {
-      const clientName = fetchName("")
-      var url = "https://multipokerdrf.onrender.com/api/transaction/"
-      if (type !== "admin")
+      let url = "https://multipokerdrf.onrender.com/api/transaction/"
+      if (type !== "admin") {
+        const clientName = fetchName("")
         url = url + "?userId=" + id + "&clientname=" + clientName
-      else
-        url = url + "?clientType=machine"
+      }
+      else if (type === "retail") {
+        url = url + "?clientType=admin"
+      }
       try {
         const response = await fetch(url)
         if (response.ok) {
@@ -144,6 +193,16 @@ const Inventario = () => {
     getData("", anioElegido, "", "")
   }
 
+  useEffect(() => {
+    getData("", "", "", "")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop])
+
+  const handleInput2 = (e) => {
+    localStorage.removeItem("shop")
+    setShop(e.target.value)
+  }
+
   const handleChange = (e) => {
     localStorage.removeItem("fecha")
     localStorage.setItem("anio", "")
@@ -169,12 +228,17 @@ const Inventario = () => {
 
   const getData = async (mesElegido, anioElegido, fechaElegida, fechaFinElegida) => {
     navigate("/inventario/" + pagina, { state: location.state })
-    const clientName = fetchName("")
-    var url = "https://multipokerdrf.onrender.com/api/transaction/"
-    if (type !== "admin")
+    let url = "https://multipokerdrf.onrender.com/api/transaction/"
+    if (type !== "admin") {
+      const clientName = await fetchName("")
       url = url + "?userId=" + id + "&clientname=" + clientName
+    }
     else if (type === "retail") {
       url = url + "?clientType=admin"
+    }
+    else if (shop !== "") {
+      const clientName = await fetchName(shop)
+      url = url + "?userId=" + id + "&clientname=" + clientName
     }
     if (fechaElegida !== "") {
       url = url + "&initDate=" + fechaElegida + "&endDate=" + fechaElegida
@@ -203,12 +267,12 @@ const Inventario = () => {
     }
   }
 
-  const fetchName= async (userId) => {
-    if(userId === "")
+  const fetchName = async (userId) => {
+    if (userId === "")
       userId = id
-    var url = "https://multipokerdrf.onrender.com/api/user/" + userId
+    let url = "https://multipokerdrf.onrender.com/api/user/" + userId
     try {
-      var response = await fetch(url)
+      let response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         if (data.type === "admin")
@@ -231,6 +295,7 @@ const Inventario = () => {
   }
 
   const AddColumn = async (data) => {
+    getTotals(data)
     const newData = await Promise.all(
       data.map(async (fila) => {
         const traderName = await fetchName(fila.userId)
@@ -242,21 +307,21 @@ const Inventario = () => {
 
   const changePage = () => {
     localStorage.setItem("fecha", fecha)
-    var textDate = ""
+    let textDate = ""
     if (fecha !== "")
       textDate = new Date(Date.parse(fecha.replace(/-/g, '/'))).toLocaleDateString("es", {
         year: 'numeric', month: '2-digit', day: '2-digit'
       })
     localStorage.setItem("textDate", textDate)
     localStorage.setItem("fechaFin", fechaFin)
-    var textDate1 = ""
+    let textDate1 = ""
     if (fechaFin !== "")
       textDate1 = new Date(Date.parse(fechaFin.replace(/-/g, '/'))).toLocaleDateString("es", {
         year: 'numeric', month: '2-digit', day: '2-digit'
       })
     localStorage.setItem("textDate1", textDate1)
     localStorage.setItem("mes", mes)
-    var textMonth = ""
+    let textMonth = ""
     switch (mes) {
       case "1":
         textMonth = "Enero"
@@ -300,6 +365,7 @@ const Inventario = () => {
     }
     localStorage.setItem("textMonth", textMonth)
     localStorage.setItem("anio", anio)
+    localStorage.setItem("shop", shop)
     localStorage.setItem("facturas", JSON.stringify(inventario))
   }
 
@@ -323,7 +389,7 @@ const Inventario = () => {
         </td>
         <td>
           {inventario[(pagina - 1) * 10 + i].cash < 0 ? `-$${Math.abs(inventario[(pagina - 1)
-            * 10 + i].cash)}` : `$${inventario[(pagina - 1) * 10 + i].cash}`}
+            * 10 + i].cash).toFixed(2)}` : `$${inventario[(pagina - 1) * 10 + i].cash.toFixed(2)}`}
         </td>
       </tr> : null
     )
@@ -360,7 +426,7 @@ const Inventario = () => {
     <>
       <div className='container'>
         <div className='row'>
-          <div className='col-7'>
+          <div className='col-8'>
             <Form>
               <FormGroup className='d-flex justify-content-around'>
                 <div className='p-2 mt-3'>
@@ -464,6 +530,25 @@ const Inventario = () => {
                     value={localStorage.getItem('anio')}
                   ></Input>}
                 </div>
+                <div className='p-2'>
+                  <Label for="exampleSelect" className='mt-3'>
+                    Escoja la tienda
+                  </Label>
+                  {pagina === 1 ? <Input onChange={handleInput2}
+                    id="exampleSelect"
+                    name="select"
+                    type="select"
+                    value={localStorage.getItem('shop')}
+                  >
+                    <option value={""}>
+                      Seleccione
+                    </option>
+                    <ShopOptions />
+                  </Input> : <Input disabled
+                    className='w-75'
+                    value={localStorage.getItem('shop')}
+                  ></Input>}
+                </div>
               </FormGroup>
             </Form>
           </div>
@@ -472,6 +557,42 @@ const Inventario = () => {
               onClick={JsonToExcel} size="lg" >Exportar a Excel</Button>
           </div> : null}
         </div>
+        {inventario.length > 0 ? <div className='row'>
+          <div className='d-flex justify-content-center'>
+            <Card>
+              <CardBody>
+                <CardTitle className="text-center" tag="h5">
+                  Total<br></br>Recargado
+                </CardTitle>
+                <CardText className="text-center">
+                  {totalCredits >= 0 ? "$" : ""}{totalCredits.toFixed(2)}
+                </CardText>
+              </CardBody>
+            </Card>
+            <Card className="ms-5">
+              <CardBody>
+                <CardTitle className="text-center" tag="h5">
+                  Total<br></br>Retirado
+                </CardTitle>
+                <CardText className="text-center">
+                  {totalPaid >= 0 ? "$" : ""}{totalPaid.toFixed(2)}
+                </CardText>
+              </CardBody>
+            </Card>
+            <Card className="ms-5">
+              <CardBody>
+                <CardTitle className="text-center" tag="h5">
+                  Total<br></br>Ganancia
+                </CardTitle>
+                <CardText className="text-center">
+                  {(totalCredits - totalPaid) < 0 ? `-$${Math.abs((totalCredits - totalPaid))
+                    .toFixed(2)}` : `$${(totalCredits - totalPaid).toFixed(2)}`}
+                </CardText>
+              </CardBody>
+            </Card>
+          </div>
+        </div> : null}
+        <br></br>
         <Table
           size="sm"
           striped
@@ -564,6 +685,31 @@ const Options = () => {
     years.map((year) => {
       return <option>{year}</option>
     }))
+}
+
+const ShopOptions = () => {
+  const [shops, setShops] = useState([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const url = "https://multipokerdrf.onrender.com/api/shop/"
+      try {
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          setShops(data)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    fetchData()
+  },)
+  return (
+    shops.map((item) => {
+      return <option value={item.userId}>{item.name}</option>
+    })
+  )
 }
 
 export default Inventario

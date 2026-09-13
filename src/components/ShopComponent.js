@@ -125,9 +125,9 @@ const Shop = (props) => {
   }
 
   const manageCash = async (machineName, type, quantity) => {
-    var totalCash = 0
-    var totalPaid = 0
-    var formData = new FormData()
+    let totalCash = 0
+    let totalPaid = 0
+    let formData = new FormData()
     if (shop.cashCredit !== null)
       totalCash = shop.cashCredit
     if (shop.cashCredit !== null)
@@ -140,7 +140,7 @@ const Shop = (props) => {
     else {
       totalCash = totalCash + parseFloat(quantity)
       totalPaid = totalPaid + parseFloat(quantity)
-      formData = createTransaction(machineName, "reembolso", quantity)
+      formData = createTransaction(machineName, "retiro", quantity)
       props.sendTransaction(formData)
     }
     shop.cashCredit = totalCash
@@ -211,9 +211,9 @@ const Shop = (props) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      var url = "https://multipokerdrf.onrender.com/api/shop/?userId=" + id
+      let url = "https://multipokerdrf.onrender.com/api/shop/?userId=" + id
       try {
-        var response = await fetch(url)
+        let response = await fetch(url)
         if (response.ok) {
           const dataShop = await response.json()
           setShop(dataShop)
@@ -256,7 +256,7 @@ const Shop = (props) => {
                 Créditos
               </CardTitle>
               <CardText className="text-center">
-                {shop.cashCredit > 0 ? "$" : ""}{shop.cashCredit}
+                {shop.cashCredit > 0 ? "$" + shop.cashCredit.toFixed(2) : ""}
               </CardText>
             </CardBody>
           </Card>
@@ -266,7 +266,7 @@ const Shop = (props) => {
                 Retiros
               </CardTitle>
               <CardText className="text-center">
-                {shop.cash > 0 ? "$" : ""}{shop.cash}
+                {shop.cash > 0 ? "$" + shop.cash.toFixed(2) : ""}
               </CardText>
             </CardBody>
           </Card>
