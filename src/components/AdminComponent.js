@@ -17,7 +17,7 @@ const Admin = (props) => {
 
   const getRetail = async (id, userId) => {
     try {
-      var url = "https://multipokerdrf.onrender.com/api/retail/"
+      let url = "https://multipokerdrf.onrender.com/api/retail/"
 
       if (userId !== "") {
         url = url + "?userId=" + userId
@@ -63,8 +63,8 @@ const Admin = (props) => {
   }
 
   const manageRetail = async (data, userId) => {
-    var url = "https://multipokerdrf.onrender.com/api/retail/"
-    var prevData = ""
+    let url = "https://multipokerdrf.onrender.com/api/retail/"
+    let prevData = ""
     const formData = new FormData()
 
     if (data === null) {
@@ -126,7 +126,7 @@ const Admin = (props) => {
   }
 
   const manageUser = async (user) => {
-    var url = "https://multipokerdrf.onrender.com/api/user/"
+    let url = "https://multipokerdrf.onrender.com/api/user/"
     const formData = new FormData()
 
     if (user === null) {
@@ -230,11 +230,11 @@ const Admin = (props) => {
   }
 
   const eliminar = async (id) => {
-    var url = "https://multipokerdrf.onrender.com/api/retail/" + id + "/"
+    let url = "https://multipokerdrf.onrender.com/api/retail/" + id + "/"
     const data = await getRetail(id, "")
     const userId = data.userId
     try {
-      var response = await props.axios.delete(url)
+      let response = await props.axios.delete(url)
       if (response.status === 204) {
         url = "https://multipokerdrf.onrender.com/api/user/" + userId + "/"
         response = await props.axios.delete(url)
