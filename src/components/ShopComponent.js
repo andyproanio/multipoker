@@ -39,8 +39,8 @@ const Shop = (props) => {
     const url = "https://multipokerdrf.onrender.com/api/machine/" + data.id + "/"
 
     if (gameCash !== "" && !gameCash.includes(",") && !gameCash.includes(".")) {
-      if (shop.gameCash - gameCash > 0) {
-        data.gameCash = gameCash
+      if (shop.cashCredit - gameCash > 0) {
+        data.cashCredit = gameCash
         manageCash(data.name, "pay", gameCash)
       }
       else
@@ -55,7 +55,7 @@ const Shop = (props) => {
       else if (!data.assigned)
         alert("Se procede a apagar la máquina")
       else if (gameCash !== "" || name !== "") {
-        if (shop.gameCash - gameCash > 0)
+        if (shop.cashCredit - gameCash > 0)
           alert("Se procede a actualizar la máquina")
       }
       else if (data.creditImage) {
