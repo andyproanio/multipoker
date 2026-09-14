@@ -46,8 +46,6 @@ const Shop = (props) => {
       else
         alert("No dispone de suficientes créditos")
     }
-    else
-      alert("Solo se permite billetes a partir de $1")
     if (name !== "")
       data.name = name
 
@@ -68,6 +66,8 @@ const Shop = (props) => {
           alert("Se procede a eliminar la imagen")
         }
       }
+      else
+        alert("Solo se permite billetes a partir de $1")
       await props.axios.put(url, data)
       setModalOpen(false)
     } catch (error) {
