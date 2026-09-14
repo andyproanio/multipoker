@@ -38,7 +38,7 @@ const Shop = (props) => {
   const changeCredit = async (data) => {
     const url = "https://multipokerdrf.onrender.com/api/machine/" + data.id + "/"
 
-    if (gameCash !== "") {
+    if (gameCash !== "" && !gameCash.includes(",") && !gameCash.includes(".")) {
       if (shop.gameCash - gameCash > 0) {
         data.gameCash = gameCash
         manageCash(data.name, "pay", gameCash)
@@ -46,6 +46,8 @@ const Shop = (props) => {
       else
         alert("No dispone de suficientes créditos")
     }
+    else
+      alert("Solo se permite billetes a partir de $1")
     if (name !== "")
       data.name = name
 
@@ -312,9 +314,9 @@ const Shop = (props) => {
                     {machine.name}
                   </th>
                   <th>
-                    <Button outline color="info" onClick={() => getCredit(machine.id)}>
+                    {machine.assigned && <Button outline color="info" onClick={() => getCredit(machine.id)}>
                       <span className="fa fa-minus"></span>
-                    </Button>
+                    </Button>}
                   </th>
                   <th>
                     {machine.creditImage && <img src={"data:image/png;base64," + machine.creditImage} height={34} width={100} alt="" />}
@@ -325,9 +327,9 @@ const Shop = (props) => {
                     </Button>}
                   </th>
                   <th>
-                    <Button outline color="success" onClick={() => edit(machine.id)}>
+                    {machine.assigned && <Button outline color="success" onClick={() => edit(machine.id)}>
                       <span className="fa fa-plus"></span>
-                    </Button>
+                    </Button>}
                   </th>
                   <th>
                     <Button outline color="danger" onClick={() => disconnect(machine.id)}>
