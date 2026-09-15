@@ -40,7 +40,7 @@ const Shop = (props) => {
 
     if (gameCash !== "" && !gameCash.includes(",") && !gameCash.includes(".")) {
       if (shop.cashCredit - gameCash > 0) {
-        data.cashCredit = gameCash
+        data.gameCash = gameCash
         manageCash(data.name, "pay", gameCash)
       }
       else
@@ -54,6 +54,9 @@ const Shop = (props) => {
         alert("Se procede a retirar los créditos")
       else if (!data.assigned)
         alert("Se procede a apagar la máquina")
+
+      else if ((data.gameCash === null || data.gameCash === 0) && shop.cashCredit - gameCash > 0)
+        alert("Solo se permite billetes a partir de $1")
       else if (gameCash !== "" || name !== "") {
         if (shop.cashCredit - gameCash > 0)
           alert("Se procede a actualizar la máquina")
@@ -66,8 +69,6 @@ const Shop = (props) => {
           alert("Se procede a eliminar la imagen")
         }
       }
-      else
-        alert("Solo se permite billetes a partir de $1")
       await props.axios.put(url, data)
       setModalOpen(false)
     } catch (error) {
