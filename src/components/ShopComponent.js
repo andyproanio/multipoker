@@ -43,8 +43,10 @@ const Shop = (props) => {
         data.gameCash = gameCash
         manageCash(data.name, "pay", gameCash)
       }
-      else
+      else {
         alert("No dispone de suficientes créditos")
+        return
+      }
     }
     if (name !== "")
       data.name = name
