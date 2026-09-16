@@ -140,7 +140,7 @@ const Shop = (props) => {
     let formData = new FormData()
     if (shop.cashCredit !== null)
       totalCash = shop.cashCredit
-    if (shop.cashCredit !== null)
+    if (shop.cash !== null)
       totalPaid = shop.cash
     if (type === "pay") {
       totalCash = totalCash - quantity
