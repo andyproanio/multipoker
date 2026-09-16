@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Button, Table, Modal, ModalHeader, ModalBody, Row, Label, Input, Card, CardTitle, CardBody, CardText
 } from 'reactstrap';
+import Tesseract from 'tesseract.js';
 import { useLocation } from 'react-router-dom'
 
 const Shop = (props) => {
@@ -63,12 +64,10 @@ const Shop = (props) => {
           alert("Se procede a actualizar la máquina")
       }
       else if (data.creditImage) {
-        const credit = prompt("Ingrese los créditos ganados")
-        if (credit !== null && credit !== "") {
-          data.creditImage = null
-          manageCash(data.name, "", parseFloat(credit) / 20)
-          alert("Se procede a eliminar la imagen")
-        }
+        const credit = await convertImagetoText(data.creditImage)
+        data.creditImage = null
+        manageCash(data.name, "", parseFloat(credit) / 20)
+        alert("Se procede a eliminar la imagen")
       }
       await props.axios.put(url, data)
       setModalOpen(false)
@@ -214,10 +213,55 @@ const Shop = (props) => {
     await changeCredit(data)
   }
 
+  const convertImagetoText = async (creditImage) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.src = "data:image/png;base64," + creditImage
+      img.onload = async () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext("2d")
+        canvas.width = 200
+        canvas.height = 68
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, 200, 68);
+
+        const imgData = ctx.getImageData(0, 0, 200, 68);
+        const pixels = imgData.data;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+
+          const gris = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          pixels[i] = gris; // R
+          pixels[i + 1] = gris; // G
+          pixels[i + 2] = gris; // B
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+
+        try {
+          const { data: { text } } = await Tesseract.recognize(canvas, 'eng',
+            {
+              tessedit_pageseg_mode: '11'
+            }
+          )
+          resolve(text.replace(/\D/g, ''))
+        }
+        catch (error) {
+          console.log(error)
+        }
+      }
+    })
+  }
+
   const clean = async (id) => {
     const data = await getMachine(id)
     await changeCredit(data)
   }
+
 
   useEffect(() => {
     const fetchData = async () => {
