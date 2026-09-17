@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Button, Table, Modal, ModalHeader, ModalBody, Row, Label, Input, Card, CardTitle, CardBody, CardText
 } from 'reactstrap';
-import Tesseract from 'tesseract.js';
 import { useLocation } from 'react-router-dom'
 
 const Shop = (props) => {
@@ -64,10 +63,12 @@ const Shop = (props) => {
           alert("Se procede a actualizar la máquina")
       }
       else if (data.creditImage) {
-        const credit = await convertImagetoText(data.creditImage)
-        data.creditImage = null
-        manageCash(data.name, "", parseFloat(credit) / 20)
-        alert("Se procede a eliminar la imagen")
+        const credit = await convertImagetoText(data.creditImage, 0)
+        if (credit !== undefined) {
+          data.creditImage = null
+          manageCash(data.name, "", parseFloat(credit) / 20)
+          alert("Se procede a eliminar la imagen")
+        }
       }
       await props.axios.put(url, data)
       setModalOpen(false)
@@ -213,48 +214,52 @@ const Shop = (props) => {
     await changeCredit(data)
   }
 
-  const convertImagetoText = async (creditImage) => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.src = "data:image/png;base64," + creditImage
-      img.onload = async () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext("2d")
-        canvas.width = 200
-        canvas.height = 68
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(img, 0, 0, 200, 68);
+  const API_KEYS = [
+    "K87457978188957",
+    "K81259629788957",
+    "K88987116588957",
+    "K81719011488957",
+    "K89305540988957",
+    "K86436423788957",
+    "K88517433288957",
+    "K88035423988957",
+    "K81549315988957",
+    "K86895590288957"
+  ];
 
-        const imgData = ctx.getImageData(0, 0, 200, 68);
-        const pixels = imgData.data;
+  const convertImagetoText = async (creditImage, keyIndex) => {
+    if (keyIndex >= API_KEYS.length) {
+      alert("Se agotó la cantidad de requests")
+      return
+    }
 
-        for (let i = 0; i < pixels.length; i += 4) {
-          const r = pixels[i];
-          const g = pixels[i + 1];
-          const b = pixels[i + 2];
+    const key = API_KEYS[keyIndex]
 
-          const gris = 0.299 * r + 0.587 * g + 0.114 * b;
+    const formData = new FormData()
+    formData.append("apikey", key);
+    formData.append("base64Image", "data:image/png;base64," + creditImage);
+    formData.append("language", "eng");
+    formData.append("ocrEngine", "3");
 
-          pixels[i] = gris; // R
-          pixels[i + 1] = gris; // G
-          pixels[i + 2] = gris; // B
-        }
-
-        ctx.putImageData(imgData, 0, 0);
-
-        try {
-          const { data: { text } } = await Tesseract.recognize(canvas, 'eng',
-            {
-              tessedit_pageseg_mode: '11'
-            }
-          )
-          resolve(text.replace(/\D/g, ''))
-        }
-        catch (error) {
-          console.log(error)
-        }
+    const config = {
+      headers: {
+        'content-type': 'multipart/form-data'
       }
-    })
+    }
+
+    try {
+      const response = await props.axios.post("https://api.ocr.space/parse/image", formData, config)
+      const result = response.data
+
+      if (result.OCRExitCode === 99) {
+        return await convertImagetoText(creditImage, keyIndex + 1)
+      }
+
+      return result.ParsedResults[0].ParsedText.replace(/\D/g, '')
+
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const clean = async (id) => {
