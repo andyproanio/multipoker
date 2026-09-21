@@ -148,7 +148,7 @@ const Inventario = () => {
       let url = "https://multipokerdrf.onrender.com/api/transaction/"
       if (type !== "admin") {
         const clientName = fetchName("")
-        url = url + "?userId=" + id + "&clientname=" + clientName
+        url = url + "?userId=" + id + "&clientName=" + clientName
       }
       else if (type === "retail") {
         url = url + "?clientType=admin"
@@ -231,14 +231,15 @@ const Inventario = () => {
     let url = "https://multipokerdrf.onrender.com/api/transaction/"
     if (type !== "admin") {
       const clientName = await fetchName("")
-      url = url + "?userId=" + id + "&clientname=" + clientName
+      url = url + "?userId=" + id + "&clientName=" + clientName
     }
     else if (type === "retail") {
       url = url + "?clientType=admin"
     }
     else if (shop !== "") {
       const clientName = await fetchName(shop)
-      url = url + "?userId=" + id + "&clientname=" + clientName
+      url = url + "?userId=" + shop + "&clientName=" + clientName
+      alert(url)
     }
     if (fechaElegida !== "") {
       url = url + "&initDate=" + fechaElegida + "&endDate=" + fechaElegida
@@ -260,7 +261,7 @@ const Inventario = () => {
         const facturas = await response.json()
         AddColumn(facturas)
         if (facturas.length === 0)
-          alert("No hay transferencias para la fecha elegida")
+          alert("No hay transferencias para los campos seleccionados")
       }
     } catch (error) {
       console.log(error)
@@ -530,7 +531,7 @@ const Inventario = () => {
                     value={localStorage.getItem('anio')}
                   ></Input>}
                 </div>
-                <div className='p-2'>
+                {type !== "shop" ? <div className='p-2'>
                   <Label for="exampleSelect" className='mt-3'>
                     Escoja la tienda
                   </Label>
@@ -548,11 +549,11 @@ const Inventario = () => {
                     className='w-75'
                     value={localStorage.getItem('shop')}
                   ></Input>}
-                </div>
+                </div> : null}
               </FormGroup>
             </Form>
           </div>
-          {inventario.length > 0 ? <div className='col-5 mt-4'>
+          {inventario.length > 0 ? <div className='col-4 mt-4'>
             <Button className='mt-3' style={{ backgroundColor: "#4CAF50" }}
               onClick={JsonToExcel} size="lg" >Exportar a Excel</Button>
           </div> : null}
