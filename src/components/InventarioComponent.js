@@ -239,7 +239,6 @@ const Inventario = () => {
     else if (shop !== "") {
       const clientName = await fetchName(shop)
       url = url + "?userId=" + shop + "&clientName=" + clientName
-      alert(url)
     }
     if (fechaElegida !== "") {
       url = url + "&initDate=" + fechaElegida + "&endDate=" + fechaElegida
