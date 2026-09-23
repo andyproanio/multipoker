@@ -92,7 +92,7 @@ const Retail = (props) => {
         formData.append("note", note)
     }
     else {
-      if(data.cashCredit === null)
+      if (data.cashCredit === null)
         data.cashCredit = 0
       if (data.cash === null)
         data.cash = ""
@@ -105,8 +105,7 @@ const Retail = (props) => {
         data.name = name
       if (client !== "")
         data.client = client
-      if (cashCredit !== "")
-      {
+      if (cashCredit !== "") {
         data.cashCredit = data.cashCredit + parseFloat(cashCredit)
         const formData = createTransaction(data.name, "recarga", cashCredit)
         props.sendTransaction(formData)
@@ -253,16 +252,19 @@ const Retail = (props) => {
     let url = "https://multipokerdrf.onrender.com/api/shop/" + id + "/"
     const data = await getShop(id, "")
     const userId = data.userId
-    try {
-      let response = await props.axios.delete(url)
-      if (response.status === 204) {
-        url = "https://multipokerdrf.onrender.com/api/user/" + userId + "/"
-        response = await props.axios.delete(url)
-        if (response.status === 204)
-          alert("Tienda eliminada con exito")
+    const delete = confirm("Está seguro de eliminar la tienda")
+    if (delete) {
+      try {
+        let response = await props.axios.delete(url)
+        if (response.status === 204) {
+          url = "https://multipokerdrf.onrender.com/api/user/" + userId + "/"
+          response = await props.axios.delete(url)
+          if (response.status === 204)
+            alert("Tienda eliminada con exito")
+        }
+      } catch (error) {
+        console.log(error)
       }
-    } catch (error) {
-      console.log(error)
     }
   }
 

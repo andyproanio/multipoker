@@ -150,8 +150,10 @@ const Shop = (props) => {
     else {
       totalCash = totalCash + parseFloat(quantity)
       totalPaid = totalPaid + parseFloat(quantity)
-      formData = createTransaction(machineName, "retiro", quantity)
-      props.sendTransaction(formData)
+      if (quantity > 0) {
+        formData = createTransaction(machineName, "retiro", quantity)
+        props.sendTransaction(formData)
+      }
     }
     shop.cashCredit = totalCash
     shop.cash = totalPaid
@@ -200,12 +202,15 @@ const Shop = (props) => {
 
   const eliminar = async (id) => {
     const url = "https://multipokerdrf.onrender.com/api/machine/" + id + "/"
-    try {
-      const response = await props.axios.delete(url)
-      if (response.status === 204)
-        alert("Maquina eliminada con exito")
-    } catch (error) {
-      console.log(error)
+    const delete = confirm("Está seguro de eliminar la máquina")
+    if (delete) {
+      try {
+        const response = await props.axios.delete(url)
+        if (response.status === 204)
+          alert("Maquina eliminada con exito")
+      } catch (error) {
+        console.log(error)
+      }
     }
   }
   const disconnect = async (id) => {

@@ -233,16 +233,19 @@ const Admin = (props) => {
     let url = "https://multipokerdrf.onrender.com/api/retail/" + id + "/"
     const data = await getRetail(id, "")
     const userId = data.userId
-    try {
-      let response = await props.axios.delete(url)
-      if (response.status === 204) {
-        url = "https://multipokerdrf.onrender.com/api/user/" + userId + "/"
-        response = await props.axios.delete(url)
-        if (response.status === 204)
-          alert("Agente eliminado con exito")
+    const delete = confirm("Está seguro de eliminar el agente")
+    if (delete) {
+      try {
+        let response = await props.axios.delete(url)
+        if (response.status === 204) {
+          url = "https://multipokerdrf.onrender.com/api/user/" + userId + "/"
+          response = await props.axios.delete(url)
+          if (response.status === 204)
+            alert("Agente eliminado con exito")
+        }
+      } catch (error) {
+        console.log(error)
       }
-    } catch (error) {
-      console.log(error)
     }
   }
 
