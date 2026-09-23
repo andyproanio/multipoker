@@ -252,7 +252,7 @@ const Retail = (props) => {
     let url = "https://multipokerdrf.onrender.com/api/shop/" + id + "/"
     const data = await getShop(id, "")
     const userId = data.userId
-    const deleted = confirm("Está seguro de eliminar la tienda")
+    const deleted = window.confirm("Está seguro de eliminar la tienda")
     if (deleted) {
       try {
         let response = await props.axios.delete(url)

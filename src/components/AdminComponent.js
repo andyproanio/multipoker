@@ -233,7 +233,7 @@ const Admin = (props) => {
     let url = "https://multipokerdrf.onrender.com/api/retail/" + id + "/"
     const data = await getRetail(id, "")
     const userId = data.userId
-    const deleted = confirm("Está seguro de eliminar el agente")
+    const deleted = window.confirm("Está seguro de eliminar el agente")
     if (deleted) {
       try {
         let response = await props.axios.delete(url)

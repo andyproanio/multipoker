@@ -202,7 +202,7 @@ const Shop = (props) => {
 
   const eliminar = async (id) => {
     const url = "https://multipokerdrf.onrender.com/api/machine/" + id + "/"
-    const deleted = confirm("Está seguro de eliminar la máquina")
+    const deleted = window.confirm("Está seguro de eliminar la máquina")
     if (deleted) {
       try {
         const response = await props.axios.delete(url)
