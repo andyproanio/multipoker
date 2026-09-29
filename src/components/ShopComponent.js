@@ -215,7 +215,9 @@ const Shop = (props) => {
   }
   const disconnect = async (id) => {
     const data = await getMachine(id)
-    data.assigned = false
+    const shutdown = window.confirm("Está seguro de que la máquina se encuentra apagada")
+    if(shutdown)
+      data.assigned = false
     await changeCredit(data)
   }
 
