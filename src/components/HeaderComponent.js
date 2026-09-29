@@ -36,9 +36,9 @@ const Header = (props) => {
       </Navbar>
       <div className="jumbotron">
         <div className="container">
-          <div className="row row-header">
-            <div className="col-12 col-sm-6">
-              <img src={window.location.origin + '/assets/images/0001.png'} height="180" width="524" alt='ListoBet' />
+          <div className="row row-header justify-content-center">
+            <div className="col-12 col-sm-6 text-center">
+              <img src={window.location.origin + '/assets/images/0001.png'} height="auto" width="98.13%" alt='ListoBet' />
             </div>
           </div>
         </div>
